@@ -69,6 +69,20 @@
             margin: 0 auto;
             border: 4px solid #dee2e6;
         }
+        
+        .health-bar-container {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 0.25rem;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .health-bar {
+            height: 100%;
+            width: 100%;
+            transition: width 0.5s ease-in-out, background-color 0.5s linear;
+        }
 
         #battle-log {
             background-color: #212529; /* Dark background for contrast */
@@ -116,12 +130,17 @@
         <section id="arena-screen">
             <header class="text-center mb-5">
                 <h1 class="game-title">The Arena</h1>
-                <p class="lead">A flavourful fight is imminent!</p>
+                <p class="lead">A flavourful fight is imminent! <span id="round-counter" class="badge bg-dark ms-2">Round 1</span></p>
             </header>
             <div class="row align-items-center">
                 <div class="col-md-5 text-center" id="player-fighter-col"></div>
                 <div class="col-md-2 text-center d-none d-md-block"><span class="vs-separator">VS</span></div>
                 <div class="col-md-5 text-center" id="opponent-fighter-col"></div>
+            </div>
+            <!-- ACTION BUTTONS -->
+            <div id="action-buttons" class="text-center mt-4 d-none">
+                 <button id="attack-btn" class="btn btn-danger btn-lg mx-2">Attack!</button>
+                 <button id="ability-btn" class="btn btn-info btn-lg mx-2">Use Ability</button>
             </div>
             <div id="battle-log">
                 <p>The crowd is simmering with anticipation...</p>
@@ -138,24 +157,35 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <!-- Weapon Choices -->
                         <div class="col-lg-6">
                             <h5>Choose a Weapon</h5>
-                            <div class="row" id="weapon-choices">
-                                <!-- Weapon cards will be injected here -->
-                            </div>
+                            <div class="row" id="weapon-choices"></div>
                         </div>
-                        <!-- Ability Choices -->
                         <div class="col-lg-6">
                             <h5>Choose an Ability</h5>
-                             <div class="row" id="ability-choices">
-                                <!-- Ability cards will be injected here -->
-                            </div>
+                             <div class="row" id="ability-choices"></div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success btn-lg" id="confirm-choices-btn" disabled>Confirm Choices & Fight!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div class="modal fade" id="gameOverModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="gameOverModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gameOverModalLabel">The Battle is Over!</h5>
+                </div>
+                <div class="modal-body" id="game-over-body">
+                    <!-- Winner/Loser message will be injected here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="play-again-btn">Play Again</button>
                 </div>
             </div>
         </div>
@@ -177,22 +207,19 @@
                 { id: 'serrano-samurai', name: 'Spicy Serrano Samurai', description: 'A glass cannon. Incredibly high attack...', image: 'https://placehold.co/400x400/D22B2B/FFFFFF?text=Serrano+Samurai', stats: { attack: 12, defense: 4, health: 75 } }
             ];
             
-            // The grand "Pantry of Power" item pool
             const itemPool = [
                 { id: 'w01', name: 'Starter Sword', type: 'weapon', description: 'A reliable blade.', statEffect: { attack: 2 } },
                 { id: 'w02', name: 'Starter Dagger', type: 'weapon', description: 'Quick and sharp.', statEffect: { attack: 3, defense: -1 } },
                 { id: 'w03', name: 'Carrot Clobberer', type: 'weapon', description: '+3 Attack', statEffect: { attack: 3 } },
                 { id: 'w04', name: 'Leek Lance', type: 'weapon', description: 'Good for poking.', statEffect: { attack: 2, defense: 1 } },
-
                 { id: 'a01', name: 'Starter Shield', type: 'armor', description: 'Better than nothing.', statEffect: { defense: 2 } },
                 { id: 'a02', name: 'Cabbage Pauldron', type: 'armor', description: 'Surprisingly sturdy.', statEffect: { defense: 3 } },
                 { id: 'a03', name: 'Garlic Ward', type: 'armor', description: 'Keeps foes at bay.', statEffect: { defense: 1, health: 5 } },
-
-                { id: 'ab01', name: 'Spicy Spit', type: 'ability', description: 'A fiery ranged attack.', character: 'serrano-samurai' },
-                { id: 'ab02', name: 'Green Ooze', type: 'ability', description: 'Slows the opponent.', character: 'avocado-avenger' },
-                { id: 'ab03', name: 'Fortify', type: 'ability', description: 'Boosts defense for 3 turns.', statEffect: { defense: 4 }},
-                { id: 'ab04', name: 'Sharpen', type: 'ability', description: 'Boosts attack for 3 turns.', statEffect: { attack: 4 }},
-                { id: 'ab05', name: 'First Aid', type: 'ability', description: 'Heal for 20 health.', statEffect: { health: 20 }},
+                { id: 'ab01', name: 'Spicy Spit', type: 'ability', description: 'A fiery ranged attack.', character: 'serrano-samurai', effect: { type: 'damage', value: 15 } },
+                { id: 'ab02', name: 'Green Ooze', type: 'ability', description: 'Lowers opponent defense.', character: 'avocado-avenger', effect: { type: 'debuff', stat: 'defense', value: -2, duration: 3 } },
+                { id: 'ab03', name: 'Fortify', type: 'ability', description: 'Boosts your defense.', effect: { type: 'buff', stat: 'defense', value: 4, duration: 3 } },
+                { id: 'ab04', name: 'Sharpen', type: 'ability', description: 'Boosts your attack.', effect: { type: 'buff', stat: 'attack', value: 4, duration: 3 } },
+                { id: 'ab05', name: 'First Aid', type: 'ability', description: 'Heal for 20 health.', effect: { type: 'heal', value: 20 } },
             ];
 
             const characterContainer = document.getElementById('character-container');
@@ -201,19 +228,200 @@
             const arenaScreen = document.getElementById('arena-screen');
             const itemModalEl = document.getElementById('itemSelectionModal');
             const itemModal = new bootstrap.Modal(itemModalEl);
+            const gameOverModalEl = document.getElementById('gameOverModal');
+            const gameOverModal = new bootstrap.Modal(gameOverModalEl);
             const confirmChoicesBtn = document.getElementById('confirm-choices-btn');
+            const battleLog = document.getElementById('battle-log');
+            const actionButtons = document.getElementById('action-buttons');
+            const attackBtn = document.getElementById('attack-btn');
+            const abilityBtn = document.getElementById('ability-btn');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const roundCounterEl = document.getElementById('round-counter');
 
             let playerCharacter = null;
             let opponentCharacter = null;
-            let playerInBattle = null; // A copy of the player character for the current battle
+            let playerInBattle = null; 
+            let opponentInBattle = null;
             let selectedWeapon = null;
             let selectedAbility = null;
+            let isPlayerTurn = true;
+            let isGameOver = false;
+            let roundCount = 1;
 
-            function renderCharacters() { /* ... (same as before) ... */ }
-            renderCharacters(); // Simplified for brevity, function is unchanged
+            // --- COMBAT LOGIC ---
+            function logMessage(message) {
+                battleLog.innerHTML += `<p>${message}</p>`;
+                battleLog.scrollTop = battleLog.scrollHeight; 
+            }
+            
+            function updateHealthBar(fighterId, currentHealth, maxHealth) {
+                const healthBar = document.querySelector(`#${fighterId}-health-bar .health-bar`);
+                const percentage = Math.max(0, (currentHealth / maxHealth) * 100);
+                healthBar.style.width = `${percentage}%`;
+                
+                healthBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+                if (percentage > 50) {
+                    healthBar.classList.add('bg-success');
+                } else if (percentage > 25) {
+                    healthBar.classList.add('bg-warning');
+                } else {
+                    healthBar.classList.add('bg-danger');
+                }
+            }
 
-            characterContainer.addEventListener('click', (event) => { /* ... (same as before) ... */ }); // Unchanged
+            function updateFighterUI(fighter, fighterId) {
+                document.getElementById(`${fighterId}-health`).textContent = Math.max(0, fighter.stats.health);
+                document.getElementById(`${fighterId}-attack`).textContent = fighter.stats.attack;
+                document.getElementById(`${fighterId}-defense`).textContent = fighter.stats.defense;
 
+                const buffsContainer = document.getElementById(`${fighterId}-buffs`);
+                buffsContainer.innerHTML = fighter.activeEffects.map(effect => {
+                    const badgeColor = effect.value > 0 ? 'bg-success' : 'bg-danger';
+                    const effectName = effect.stat.charAt(0).toUpperCase() + effect.stat.slice(1) + (effect.value > 0 ? ' Up' : ' Down');
+                    return `<span class="badge ${badgeColor} me-1">${effectName} (${effect.duration} turns)</span>`;
+                }).join('');
+            }
+            
+            function applyEffect(effect, target, caster) {
+                target.activeEffects.push({...effect}); // Add a copy of the effect
+                target.stats[effect.stat] += effect.value;
+                logMessage(`${caster.name}'s ${selectedAbility.name} affects ${target.name}, altering their ${effect.stat} by ${effect.value} for ${effect.duration} turns.`);
+                updateFighterUI(target, target === playerInBattle ? 'player' : 'opponent');
+            }
+
+            function tickEffects(fighter, fighterId) {
+                logMessage(`${fighter.name}'s turn begins.`);
+                for (let i = fighter.activeEffects.length - 1; i >= 0; i--) {
+                    const effect = fighter.activeEffects[i];
+                    effect.duration--;
+                    if (effect.duration <= 0) {
+                        fighter.stats[effect.stat] -= effect.value; // Revert stat change
+                        logMessage(`${fighter.name}'s ${effect.stat} returns to normal as ${selectedAbility.name} wears off.`);
+                        fighter.activeEffects.splice(i, 1); // Remove effect
+                    }
+                }
+                updateFighterUI(fighter, fighterId);
+            }
+
+            function performAttack(attacker, defender, defenderId) {
+                let enrageBonus = roundCount >= 10 ? (roundCount - 9) : 0;
+                let attackPower = attacker.stats.attack + enrageBonus;
+
+                if (Math.random() < 0.1) {
+                    logMessage(`${attacker.name}'s attack missed!`);
+                    return;
+                }
+
+                let damage = Math.max(1, attackPower - defender.stats.defense);
+                let isCritical = false;
+
+                if (Math.random() < 0.1) {
+                    damage = Math.floor(damage * 1.5);
+                    isCritical = true;
+                }
+
+                defender.stats.health -= damage;
+                
+                let attackMessage = `${attacker.name} attacks ${defender.name} for ${damage} damage!`;
+                if (isCritical) attackMessage = `A critical hit! ${attackMessage}`;
+                if (enrageBonus > 0) attackMessage += ` (Enraged!)`;
+                
+                logMessage(attackMessage);
+                updateHealthBar(defenderId, defender.stats.health, defender.maxHealth);
+                updateFighterUI(defender, defenderId);
+            }
+            
+            function useAbility() {
+                if (!selectedAbility.effect) {
+                    logMessage(`${selectedAbility.name} has no effect!`);
+                    return;
+                }
+                const effect = selectedAbility.effect;
+
+                switch(effect.type) {
+                    case 'heal':
+                        playerInBattle.stats.health = Math.min(playerInBattle.maxHealth, playerInBattle.stats.health + effect.value);
+                        logMessage(`${playerInBattle.name} uses ${selectedAbility.name}, healing for ${effect.value} health.`);
+                        updateHealthBar('player', playerInBattle.stats.health, playerInBattle.maxHealth);
+                        updateFighterUI(playerInBattle, 'player');
+                        break;
+                    case 'damage':
+                        opponentInBattle.stats.health -= effect.value;
+                        logMessage(`${playerInBattle.name} uses ${selectedAbility.name}, dealing ${effect.value} damage to ${opponentInBattle.name}.`);
+                        updateHealthBar('opponent', opponentInBattle.stats.health, opponentInBattle.maxHealth);
+                        updateFighterUI(opponentInBattle, 'opponent');
+                        break;
+                    case 'buff':
+                        applyEffect(effect, playerInBattle, playerInBattle);
+                        break;
+                    case 'debuff':
+                        applyEffect(effect, opponentInBattle, playerInBattle);
+                        break;
+                }
+                abilityBtn.disabled = true;
+                checkGameOver();
+                if(!isGameOver) endTurn();
+            }
+
+            function endTurn() {
+                if (isGameOver) return;
+                isPlayerTurn = !isPlayerTurn;
+
+                if (isPlayerTurn) {
+                    roundCount++;
+                    roundCounterEl.textContent = `Round ${roundCount}`;
+                    if (roundCount === 10) logMessage("The kombatants are getting tired... and angry! All attacks are now stronger!");
+                    tickEffects(playerInBattle, 'player');
+                    actionButtons.classList.remove('d-none');
+                } else {
+                    opponentTurn();
+                }
+            }
+
+            function checkGameOver() {
+                if (playerInBattle.stats.health <= 0 || opponentInBattle.stats.health <= 0) {
+                    isGameOver = true;
+                    const winner = opponentInBattle.stats.health <= 0 ? playerInBattle : opponentInBattle;
+                    const loser = winner === playerInBattle ? opponentInBattle : playerInBattle;
+
+                    logMessage(`${loser.name} has been pureed! ${winner.name} is the winner!`);
+                    document.getElementById('game-over-body').textContent = winner === playerInBattle ? 
+                        `Congratulations! You defeated ${loser.name}!` : 
+                        `You were defeated by ${winner.name}!`;
+                    
+                    gameOverModal.show();
+                    actionButtons.classList.add('d-none');
+                    return true;
+                }
+                return false;
+            }
+
+            function opponentTurn() {
+                actionButtons.classList.add('d-none');
+                tickEffects(opponentInBattle, 'opponent');
+
+                logMessage(`${opponentInBattle.name} is preparing its move...`);
+                
+                setTimeout(() => {
+                    performAttack(opponentInBattle, playerInBattle, 'player');
+                    if (!checkGameOver()) endTurn();
+                }, 1500); 
+            }
+            
+            attackBtn.addEventListener('click', () => {
+                if (!isPlayerTurn || isGameOver) return;
+                actionButtons.classList.add('d-none');
+                performAttack(playerInBattle, opponentInBattle, 'opponent');
+                if (!checkGameOver()) endTurn();
+            });
+
+            abilityBtn.addEventListener('click', () => {
+                if (!isPlayerTurn || isGameOver) return;
+                actionButtons.classList.add('d-none');
+                useAbility();
+            });
+
+            // --- SETUP AND UI ---
             function createFighterDisplay(character, isPlayer = false) {
                 const charId = isPlayer ? 'player' : 'opponent';
                 return `
@@ -221,95 +429,74 @@
                         <img src="${character.image}" alt="${character.name}" class="fighter-img mb-3">
                         <h2>${character.name}</h2>
                         <ul class="list-unstyled">
-                            <li><strong>Health:</strong> <span id="${charId}-health">${character.stats.health}</span></li>
+                            <li><strong>Health:</strong> <span id="${charId}-health">${character.stats.health}</span> / ${character.maxHealth}</li>
+                        </ul>
+                        <div id="${charId}-health-bar" class="health-bar-container">
+                            <div class="health-bar bg-success"></div>
+                        </div>
+                        <ul class="list-unstyled mt-3">
                             <li><strong>Attack:</strong> <span id="${charId}-attack">${character.stats.attack}</span></li>
                             <li><strong>Defense:</strong> <span id="${charId}-defense">${character.stats.defense}</span></li>
                         </ul>
-                    </div>`;
-            }
-
-            function populateItemModal() {
-                const weaponChoicesContainer = document.getElementById('weapon-choices');
-                const abilityChoicesContainer = document.getElementById('ability-choices');
-                
-                // Get 3 random weapons (for now, includes armor)
-                const weapons = itemPool.filter(item => item.type === 'weapon' || item.type === 'armor');
-                const randomWeapons = [...weapons].sort(() => 0.5 - Math.random()).slice(0, 3);
-                
-                // Get 3 random abilities
-                const abilities = itemPool.filter(item => item.type === 'ability');
-                const randomAbilities = [...abilities].sort(() => 0.5 - Math.random()).slice(0, 3);
-
-                const createItemCard = (item) => `
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100 item-card" data-item-id="${item.id}" data-item-type="${item.type}">
-                            <div class="card-body">
-                                <h6 class="card-title">${item.name}</h6>
-                                <p class="card-text small">${item.description}</p>
-                            </div>
+                        <div id="${charId}-buffs" class="mt-2">
+                             <!-- Initial buffs like weapon choice will go here -->
+                        </div>
+                         <div id="${charId}-effects" class="mt-2">
+                            <!-- Temporary effects from abilities will go here -->
                         </div>
                     </div>`;
-
-                weaponChoicesContainer.innerHTML = randomWeapons.map(createItemCard).join('');
-                abilityChoicesContainer.innerHTML = randomAbilities.map(createItemCard).join('');
             }
 
-            itemModalEl.addEventListener('click', (event) => {
-                const card = event.target.closest('.item-card');
-                if (!card) return;
-
-                const itemId = card.dataset.itemId;
-                const itemType = card.dataset.itemType;
-                
-                if (itemType === 'weapon' || itemType === 'armor') {
-                    document.querySelectorAll('#weapon-choices .item-card').forEach(c => c.classList.remove('selected'));
-                    selectedWeapon = itemPool.find(item => item.id === itemId);
-                } else if (itemType === 'ability') {
-                    document.querySelectorAll('#ability-choices .item-card').forEach(c => c.classList.remove('selected'));
-                    selectedAbility = itemPool.find(item => item.id === itemId);
+            function applyPermanentBuff(item, fighter) {
+                if (!item.statEffect) return;
+                let log = `You chose ${item.name}.`;
+                const effects = [];
+                for (const stat in item.statEffect) {
+                    fighter.stats[stat] += item.statEffect[stat];
+                    let sign = item.statEffect[stat] > 0 ? '+' : '';
+                    effects.push(`${sign}${item.statEffect[stat]} ${stat}`);
                 }
-                
-                card.classList.add('selected');
-
-                if (selectedWeapon && selectedAbility) {
-                    confirmChoicesBtn.disabled = false;
-                }
-            });
+                log += ` (${effects.join(', ')})`;
+                logMessage(log);
+            }
 
             confirmChoicesBtn.addEventListener('click', () => {
-                // Apply stat changes from items
-                if (selectedWeapon.statEffect) {
-                    for (const stat in selectedWeapon.statEffect) {
-                        playerInBattle.stats[stat] += selectedWeapon.statEffect[stat];
-                    }
-                }
-                if (selectedAbility.statEffect) {
-                    for (const stat in selectedAbility.statEffect) {
-                        playerInBattle.stats[stat] += selectedAbility.statEffect[stat];
-                    }
-                }
+                applyPermanentBuff(selectedWeapon, playerInBattle);
+                playerInBattle.maxHealth = playerInBattle.stats.health; // Update max health after buffs
 
-                // Update the UI with new stats
-                document.getElementById('player-health').textContent = playerInBattle.stats.health;
-                document.getElementById('player-attack').textContent = playerInBattle.stats.attack;
-                document.getElementById('player-defense').textContent = playerInBattle.stats.defense;
+                logMessage(`You chose the ${selectedAbility.name} ability.`);
+                
+                // Display permanent equipment
+                document.getElementById('player-buffs').innerHTML = `
+                    <span class="badge bg-secondary me-1" title="${selectedWeapon.description}">${selectedWeapon.name}</span>
+                `;
+
+                updateFighterUI(playerInBattle, 'player'); // Update UI with buffed stats
 
                 itemModal.hide();
-                console.log("Player is ready to fight with:", playerInBattle);
-                document.getElementById('battle-log').innerHTML += `<p>You are equipped with ${selectedWeapon.name} and the ${selectedAbility.name} ability. The fight begins!</p>`;
+                logMessage(`The fight begins!`);
+                actionButtons.classList.remove('d-none');
+                tickEffects(playerInBattle, 'player');
+            });
+            
+            playAgainBtn.addEventListener('click', () => {
+                location.reload();
             });
 
             enterArenaBtn.addEventListener('click', () => {
                 if (!playerCharacter) return;
                 
-                // Create a deep copy of the player character for this battle instance
                 playerInBattle = JSON.parse(JSON.stringify(playerCharacter));
+                playerInBattle.maxHealth = playerInBattle.stats.health;
+                playerInBattle.activeEffects = [];
 
                 const availableOpponents = characters.filter(char => char.id !== playerCharacter.id);
-                opponentCharacter = availableOpponents[Math.floor(Math.random() * availableOpponents.length)];
+                opponentInBattle = JSON.parse(JSON.stringify(availableOpponents[Math.floor(Math.random() * availableOpponents.length)]));
+                opponentInBattle.maxHealth = opponentInBattle.stats.health;
+                opponentInBattle.activeEffects = [];
                 
                 document.getElementById('player-fighter-col').innerHTML = createFighterDisplay(playerInBattle, true);
-                document.getElementById('opponent-fighter-col').innerHTML = createFighterDisplay(opponentCharacter);
+                document.getElementById('opponent-fighter-col').innerHTML = createFighterDisplay(opponentInBattle);
 
                 charSelectionScreen.style.display = 'none';
                 arenaScreen.style.display = 'block';
@@ -318,7 +505,6 @@
                 itemModal.show();
             });
 
-            // --- Reset function for re-rendering character cards (unchanged) ---
             function renderCharacters() {
                 characterContainer.innerHTML = characters.map(char => `
                     <div class="col-12 col-md-6 col-lg-3 mb-4">
@@ -338,15 +524,75 @@
                     </div>
                 `).join('');
             }
-            // --- Reset function for character selection (unchanged) ---
+            renderCharacters();
+
             characterContainer.addEventListener('click', (event) => {
                 if (event.target.classList.contains('select-btn')) {
                     const clickedCard = event.target.closest('.card');
                     const characterId = clickedCard.dataset.characterId;
-                    document.querySelectorAll('#character-container .card').forEach(card => card.classList.remove('selected'));
+
+                    document.querySelectorAll('#character-container .card').forEach(card => {
+                        card.classList.remove('selected');
+                        const button = card.querySelector('.select-btn');
+                        if (button) {
+                            button.textContent = `Select ${card.querySelector('.card-title').textContent}`;
+                            button.classList.remove('btn-primary');
+                            button.classList.add('btn-outline-primary');
+                        }
+                    });
+
                     clickedCard.classList.add('selected');
+                    event.target.textContent = 'Selected!';
+                    event.target.classList.remove('btn-outline-primary');
+                    event.target.classList.add('btn-primary');
+                    
                     playerCharacter = characters.find(char => char.id === characterId);
                     enterArenaBtn.disabled = false;
+                }
+            });
+            
+            function populateItemModal() {
+                const weaponChoicesContainer = document.getElementById('weapon-choices');
+                const abilityChoicesContainer = document.getElementById('ability-choices');
+                
+                const weapons = itemPool.filter(item => item.type === 'weapon' || item.type === 'armor');
+                const randomWeapons = [...weapons].sort(() => 0.5 - Math.random()).slice(0, 3);
+                
+                const abilities = itemPool.filter(item => item.type === 'ability');
+                const randomAbilities = [...abilities].sort(() => 0.5 - Math.random()).slice(0, 3);
+
+                const createItemCard = (item) => `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 item-card" data-item-id="${item.id}" data-item-type="${item.type}">
+                            <div class="card-body">
+                                <h6 class="card-title">${item.name}</h6>
+                                <p class="card-text small">${item.description}</p>
+                            </div>
+                        </div>
+                    </div>`;
+
+                weaponChoicesContainer.innerHTML = randomWeapons.map(createItemCard).join('');
+                abilityChoicesContainer.innerHTML = randomAbilities.map(createItemCard).join('');
+            }
+             itemModalEl.addEventListener('click', (event) => {
+                const card = event.target.closest('.card.item-card');
+                if (!card) return;
+
+                const itemId = card.dataset.itemId;
+                const itemType = card.dataset.itemType;
+                
+                if (itemType === 'weapon' || itemType === 'armor') {
+                    document.querySelectorAll('#weapon-choices .card.item-card').forEach(c => c.classList.remove('selected'));
+                    selectedWeapon = itemPool.find(item => item.id === itemId);
+                } else if (itemType === 'ability') {
+                    document.querySelectorAll('#ability-choices .card.item-card').forEach(c => c.classList.remove('selected'));
+                    selectedAbility = itemPool.find(item => item.id === itemId);
+                }
+                
+                card.classList.add('selected');
+
+                if (selectedWeapon && selectedAbility) {
+                    confirmChoicesBtn.disabled = false;
                 }
             });
         });
