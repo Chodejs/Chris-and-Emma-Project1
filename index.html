@@ -14,185 +14,266 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <style>
-        /* Custom styles for our game */
+        /* General Styles */
         body {
-            background-color: #f0f2f5; /* A light, clean background */
+            background-color: #3d2c2c; /* A darker, wood-table like background */
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
             font-family: 'Roboto', sans-serif;
             color: #333;
+            overflow-x: hidden; /* Prevent horizontal scroll on small screens */
         }
 
         .game-title {
             font-family: 'Press Start 2P', cursive;
-            color: #4A4A4A;
-            text-shadow: 2px 2px #E0E0E0;
+            color: #fff;
+            text-shadow: 2px 2px #4A4A4A;
         }
 
-        .card {
-            border: 3px solid transparent; /* Increased border width for visibility */
+        /* Character Selection remains mostly the same */
+        #character-selection-screen {
+            background-color: #f0f2f5;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+        #character-selection-screen .game-title {
+            color: #4A4A4A; /* Title color for the light background of selection screen */
+        }
+        #character-selection-screen .card {
+            border: 3px solid transparent;
             transition: all 0.3s ease-in-out;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-
-        .card:hover {
+        #character-selection-screen .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
-
-        .card.selected {
-            border-color: #0d6efd; /* Bootstrap primary blue */
+        #character-selection-screen .card.selected {
+            border-color: #0d6efd;
             box-shadow: 0 8px 24px rgba(13, 110, 253, 0.3);
             transform: translateY(-5px) scale(1.02);
         }
-        
-        /* Styles for the Arena */
-        #arena-screen { display: none; }
 
-        .fighter-card {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        /* NEW ARENA STYLES */
+        #arena-screen {
+            display: none; /* Hidden by default */
+            min-height: 90vh;
+            padding: 1rem 0;
         }
 
-        .vs-separator {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 3rem;
-            color: #dc3545; /* Bootstrap danger red */
-        }
-
-        .card-img-top, .fighter-img {
-            height: 200px;
-            width: 200px;
-            object-fit: cover;
-            background-color: #e9ecef;
-            border-radius: 50%;
-            margin: 0 auto;
-            border: 4px solid #dee2e6;
-        }
-        
-        .health-bar-container {
-            height: 20px;
-            background-color: #e9ecef;
-            border-radius: 0.25rem;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-
-        .health-bar {
-            height: 100%;
+        .game-board {
+            display: flex;
+            flex-direction: column;
             width: 100%;
-            transition: width 0.5s ease-in-out, background-color 0.5s linear;
-        }
-
-        #battle-log {
-            background-color: #212529; /* Dark background for contrast */
-            color: #f8f9fa; /* Light text */
-            height: 200px;
-            overflow-y: scroll;
+            max-width: 1200px;
+            margin: auto;
+            aspect-ratio: 16 / 9; /* Maintain a widescreen aspect ratio */
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
             padding: 1rem;
-            border-radius: 0.25rem;
-            font-family: monospace;
-            margin-top: 2rem;
         }
         
-        /* Mobile horizontal scroll for character selection */
-        @media (max-width: 767.98px) {
-            .character-selection-row {
-                display: flex;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                padding-bottom: 1rem;
-            }
-            .character-selection-row .col-md-6 {
-                flex: 0 0 80%;
-                max-width: 80%;
-            }
+        /* Represents a row of cards or hero info */
+        .board-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
         }
+
+        .hero-area {
+            position: relative; /* Needed for positioning the ability button */
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .hero-portrait {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        
+        /* NEW Hero Ability Button */
+        .hero-ability-btn {
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #ffc107; /* A nice gold color */
+            border: 3px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            font-size: 1.5rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .hero-ability-btn:hover {
+            background-color: #ffd54f;
+            transform: translateX(-50%) scale(1.1);
+        }
+        .hero-ability-btn::after {
+            content: '💥'; /* Placeholder for an icon */
+        }
+
+
+        .hero-stats {
+            color: #fff;
+            background-color: rgba(0,0,0,0.5);
+            padding: 0.5rem;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .hero-health::before { content: '❤️ '; }
+        
+        .spice-area {
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            text-shadow: 1px 1px #000;
+        }
+        .spice-area::after { content: '🌶️'; }
+
+        .deck-area {
+            color: #fff;
+            text-align: center;
+        }
+        .card-back {
+            width: 50px;
+            height: 70px;
+            background-color: #5c3c3c;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Play area for pets/minions */
+        .play-area {
+            justify-content: space-around;
+        }
+
+        .card-slot {
+            width: 100px;
+            height: 140px;
+            background-color: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+
+        /* Player's hand area */
+        .player-hand {
+            background-color: rgba(0,0,0,0.4);
+            border-top: 2px solid #4A4A4A;
+            min-height: 160px;
+        }
+
+        .card-in-hand {
+            width: 100px;
+            height: 140px;
+            background-color: #f0f2f5;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .card-in-hand:hover {
+            transform: translateY(-20px) scale(1.1);
+            z-index: 100;
+        }
+
     </style>
 </head>
 <body>
 
-    <main class="container my-5">
-        <!-- CHARACTER SELECTION SCREEN -->
-        <section id="character-selection-screen">
-            <header class="text-center mb-5">
-                <h1 class="game-title">Kitchen Kombat</h1>
-                <p class="lead">Choose Your Culinary Champion!</p>
-            </header>
-            <div id="character-container" class="row character-selection-row text-center"></div>
-            <div class="text-center mt-5">
-                <button id="enter-arena-btn" class="btn btn-danger btn-lg" disabled>Enter the Arena!</button>
-            </div>
-        </section>
+    <!-- CHARACTER SELECTION SCREEN (Unchanged) -->
+    <section id="character-selection-screen" class="container my-5">
+        <header class="text-center mb-5">
+            <h1 class="game-title">Kitchen Kombat</h1>
+            <p class="lead">Choose Your Culinary Champion!</p>
+        </header>
+        <div id="character-container" class="row character-selection-row text-center"></div>
+        <div class="text-center mt-5">
+            <button id="enter-arena-btn" class="btn btn-danger btn-lg" disabled>Enter the Arena!</button>
+        </div>
+    </section>
 
-        <!-- BATTLE ARENA SCREEN -->
-        <section id="arena-screen">
-            <header class="text-center mb-5">
-                <h1 class="game-title">The Arena</h1>
-                <p class="lead">A flavourful fight is imminent! <span id="round-counter" class="badge bg-dark ms-2">Round 1</span></p>
-            </header>
-            <div class="row align-items-center">
-                <div class="col-md-5 text-center" id="player-fighter-col"></div>
-                <div class="col-md-2 text-center d-none d-md-block"><span class="vs-separator">VS</span></div>
-                <div class="col-md-5 text-center" id="opponent-fighter-col"></div>
-            </div>
-            <!-- ACTION BUTTONS -->
-            <div id="action-buttons" class="text-center mt-4 d-none">
-                 <button id="attack-btn" class="btn btn-danger btn-lg mx-2">Attack!</button>
-                 <button id="ability-btn" class="btn btn-info btn-lg mx-2">Use Ability</button>
-            </div>
-            <div id="battle-log">
-                <p>The crowd is simmering with anticipation...</p>
-            </div>
-        </section>
-    </main>
-
-    <!-- PRE-BATTLE MODAL -->
-    <div class="modal fade" id="itemSelectionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="itemSelectionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="itemSelectionModalLabel">Pantry of Power: Gear Up!</h5>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <h5>Choose a Weapon</h5>
-                            <div class="row" id="weapon-choices"></div>
-                        </div>
-                        <div class="col-lg-6">
-                            <h5>Choose an Ability</h5>
-                             <div class="row" id="ability-choices"></div>
-                        </div>
+    <!-- NEW BATTLE ARENA SCREEN -->
+    <section id="arena-screen">
+        <div class="game-board">
+            <!-- Opponent's Row -->
+            <div class="board-row">
+                <div class="hero-area">
+                    <img id="opponent-portrait" src="https://placehold.co/100x100/D22B2B/FFFFFF?text=CPU" alt="Opponent" class="hero-portrait">
+                    <div class="hero-ability-btn" title="Opponent Ability"></div>
+                    <div class="hero-stats">
+                        <div id="opponent-health" class="hero-health">30</div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success btn-lg" id="confirm-choices-btn" disabled>Confirm Choices & Fight!</button>
+                <div class="play-area board-row">
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
                 </div>
+                <div class="deck-area">
+                    <div class="card-back" id="opponent-deck">25</div>
+                </div>
+                 <div class="spice-area" id="opponent-spice">0/10</div>
             </div>
-        </div>
-    </div>
 
-    <!-- GAME OVER MODAL -->
-    <div class="modal fade" id="gameOverModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="gameOverModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="gameOverModalLabel">The Battle is Over!</h5>
+            <!-- Player's Row -->
+            <div class="board-row">
+                 <div class="spice-area" id="player-spice">0/10</div>
+                 <div class="deck-area">
+                    <div class="card-back" id="player-deck">25</div>
                 </div>
-                <div class="modal-body" id="game-over-body">
-                    <!-- Winner/Loser message will be injected here -->
+                <div class="play-area board-row">
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="play-again-btn">Play Again</button>
+                <div class="hero-area">
+                     <div class="hero-stats">
+                        <div id="player-health" class="hero-health">30</div>
+                    </div>
+                    <img id="player-portrait" src="https://placehold.co/100x100/C2C2C2/4A4A4A?text=Player" alt="Player" class="hero-portrait">
+                    <div class="hero-ability-btn" id="player-ability-btn" title="Use Hero Ability"></div>
                 </div>
             </div>
+
+            <!-- Player's Hand -->
+            <div class="board-row player-hand" id="player-hand-area">
+                <!-- Cards will be dynamically inserted here -->
+                <div class="card-in-hand">Card 1</div>
+                <div class="card-in-hand">Card 2</div>
+                <div class="card-in-hand">Card 3</div>
+                <div class="card-in-hand">Card 4</div>
+                <div class="card-in-hand">Card 5</div>
+            </div>
         </div>
-    </div>
+    </section>
 
     <footer class="text-center text-muted py-4">
-        <p>&copy; 2025 Designed by Chris and Emma</p>
+        <p style="color: #ccc;">&copy; 2025 Designed by Chris and Emma</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -201,310 +282,21 @@
         document.addEventListener('DOMContentLoaded', () => {
 
             const characters = [
-                { id: 'tofu-titan', name: 'Tofu Titan', description: 'A sturdy and resilient fighter...', image: 'https://placehold.co/400x400/C2C2C2/4A4A4A?text=Tofu+Titan', stats: { attack: 6, defense: 10, health: 120 } },
-                { id: 'quinoa-queen', name: 'Quinoa Queen', description: 'A flurry of tiny, powerful strikes...', image: 'https://placehold.co/400x400/EADCA6/4A4A4A?text=Quinoa+Queen', stats: { attack: 9, defense: 6, health: 90 } },
-                { id: 'avocado-avenger', name: 'Avocado Avenger', description: 'Full of healthy fats and a smooth style...', image: 'https://placehold.co/400x400/8A9A5B/FFFFFF?text=Avocado+Avenger', stats: { attack: 7, defense: 8, health: 100 } },
-                { id: 'serrano-samurai', name: 'Spicy Serrano Samurai', description: 'A glass cannon. Incredibly high attack...', image: 'https://placehold.co/400x400/D22B2B/FFFFFF?text=Serrano+Samurai', stats: { attack: 12, defense: 4, health: 75 } }
+                { id: 'tofu-titan', name: 'Tofu Titan', description: 'A sturdy and resilient fighter...', image: 'https://placehold.co/400x400/C2C2C2/4A4A4A?text=Tofu+Titan', stats: { health: 30 } },
+                { id: 'quinoa-queen', name: 'Quinoa Queen', description: 'A flurry of tiny, powerful strikes...', image: 'https://placehold.co/400x400/EADCA6/4A4A4A?text=Quinoa+Queen', stats: { health: 30 } },
+                { id: 'avocado-avenger', name: 'Avocado Avenger', description: 'Full of healthy fats and a smooth style...', image: 'https://placehold.co/400x400/8A9A5B/FFFFFF?text=Avocado+Avenger', stats: { health: 30 } },
+                { id: 'serrano-samurai', name: 'Serrano Samurai', description: 'A glass cannon. Incredibly high attack...', image: 'https://placehold.co/400x400/D22B2B/FFFFFF?text=Serrano+Samurai', stats: { health: 30 } }
             ];
             
-            const itemPool = [
-                { id: 'w01', name: 'Starter Sword', type: 'weapon', description: 'A reliable blade.', statEffect: { attack: 2 } },
-                { id: 'w02', name: 'Starter Dagger', type: 'weapon', description: 'Quick and sharp.', statEffect: { attack: 3, defense: -1 } },
-                { id: 'w03', name: 'Carrot Clobberer', type: 'weapon', description: '+3 Attack', statEffect: { attack: 3 } },
-                { id: 'w04', name: 'Leek Lance', type: 'weapon', description: 'Good for poking.', statEffect: { attack: 2, defense: 1 } },
-                { id: 'a01', name: 'Starter Shield', type: 'armor', description: 'Better than nothing.', statEffect: { defense: 2 } },
-                { id: 'a02', name: 'Cabbage Pauldron', type: 'armor', description: 'Surprisingly sturdy.', statEffect: { defense: 3 } },
-                { id: 'a03', name: 'Garlic Ward', type: 'armor', description: 'Keeps foes at bay.', statEffect: { defense: 1, health: 5 } },
-                { id: 'ab01', name: 'Spicy Spit', type: 'ability', description: 'A fiery ranged attack.', character: 'serrano-samurai', effect: { type: 'damage', value: 15 } },
-                { id: 'ab02', name: 'Green Ooze', type: 'ability', description: 'Lowers opponent defense.', character: 'avocado-avenger', effect: { type: 'debuff', stat: 'defense', value: -2, duration: 3 } },
-                { id: 'ab03', name: 'Fortify', type: 'ability', description: 'Boosts your defense.', effect: { type: 'buff', stat: 'defense', value: 4, duration: 3 } },
-                { id: 'ab04', name: 'Sharpen', type: 'ability', description: 'Boosts your attack.', effect: { type: 'buff', stat: 'attack', value: 4, duration: 3 } },
-                { id: 'ab05', name: 'First Aid', type: 'ability', description: 'Heal for 20 health.', effect: { type: 'heal', value: 20 } },
-            ];
-
+            // --- Elements ---
             const characterContainer = document.getElementById('character-container');
             const enterArenaBtn = document.getElementById('enter-arena-btn');
             const charSelectionScreen = document.getElementById('character-selection-screen');
             const arenaScreen = document.getElementById('arena-screen');
-            const itemModalEl = document.getElementById('itemSelectionModal');
-            const itemModal = new bootstrap.Modal(itemModalEl);
-            const gameOverModalEl = document.getElementById('gameOverModal');
-            const gameOverModal = new bootstrap.Modal(gameOverModalEl);
-            const confirmChoicesBtn = document.getElementById('confirm-choices-btn');
-            const battleLog = document.getElementById('battle-log');
-            const actionButtons = document.getElementById('action-buttons');
-            const attackBtn = document.getElementById('attack-btn');
-            const abilityBtn = document.getElementById('ability-btn');
-            const playAgainBtn = document.getElementById('play-again-btn');
-            const roundCounterEl = document.getElementById('round-counter');
-
+            
             let playerCharacter = null;
-            let opponentCharacter = null;
-            let playerInBattle = null; 
-            let opponentInBattle = null;
-            let selectedWeapon = null;
-            let selectedAbility = null;
-            let isPlayerTurn = true;
-            let isGameOver = false;
-            let roundCount = 1;
 
-            // --- COMBAT LOGIC ---
-            function logMessage(message) {
-                battleLog.innerHTML += `<p>${message}</p>`;
-                battleLog.scrollTop = battleLog.scrollHeight; 
-            }
-            
-            function updateHealthBar(fighterId, currentHealth, maxHealth) {
-                const healthBar = document.querySelector(`#${fighterId}-health-bar .health-bar`);
-                const percentage = Math.max(0, (currentHealth / maxHealth) * 100);
-                healthBar.style.width = `${percentage}%`;
-                
-                healthBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
-                if (percentage > 50) {
-                    healthBar.classList.add('bg-success');
-                } else if (percentage > 25) {
-                    healthBar.classList.add('bg-warning');
-                } else {
-                    healthBar.classList.add('bg-danger');
-                }
-            }
-
-            function updateFighterUI(fighter, fighterId) {
-                document.getElementById(`${fighterId}-health`).textContent = Math.max(0, fighter.stats.health);
-                document.getElementById(`${fighterId}-attack`).textContent = fighter.stats.attack;
-                document.getElementById(`${fighterId}-defense`).textContent = fighter.stats.defense;
-
-                const buffsContainer = document.getElementById(`${fighterId}-buffs`);
-                buffsContainer.innerHTML = fighter.activeEffects.map(effect => {
-                    const badgeColor = effect.value > 0 ? 'bg-success' : 'bg-danger';
-                    const effectName = effect.stat.charAt(0).toUpperCase() + effect.stat.slice(1) + (effect.value > 0 ? ' Up' : ' Down');
-                    return `<span class="badge ${badgeColor} me-1">${effectName} (${effect.duration} turns)</span>`;
-                }).join('');
-            }
-            
-            function applyEffect(effect, target, caster) {
-                target.activeEffects.push({...effect}); // Add a copy of the effect
-                target.stats[effect.stat] += effect.value;
-                logMessage(`${caster.name}'s ${selectedAbility.name} affects ${target.name}, altering their ${effect.stat} by ${effect.value} for ${effect.duration} turns.`);
-                updateFighterUI(target, target === playerInBattle ? 'player' : 'opponent');
-            }
-
-            function tickEffects(fighter, fighterId) {
-                logMessage(`${fighter.name}'s turn begins.`);
-                for (let i = fighter.activeEffects.length - 1; i >= 0; i--) {
-                    const effect = fighter.activeEffects[i];
-                    effect.duration--;
-                    if (effect.duration <= 0) {
-                        fighter.stats[effect.stat] -= effect.value; // Revert stat change
-                        logMessage(`${fighter.name}'s ${effect.stat} returns to normal as ${selectedAbility.name} wears off.`);
-                        fighter.activeEffects.splice(i, 1); // Remove effect
-                    }
-                }
-                updateFighterUI(fighter, fighterId);
-            }
-
-            function performAttack(attacker, defender, defenderId) {
-                let enrageBonus = roundCount >= 10 ? (roundCount - 9) : 0;
-                let attackPower = attacker.stats.attack + enrageBonus;
-
-                if (Math.random() < 0.1) {
-                    logMessage(`${attacker.name}'s attack missed!`);
-                    return;
-                }
-
-                let damage = Math.max(1, attackPower - defender.stats.defense);
-                let isCritical = false;
-
-                if (Math.random() < 0.1) {
-                    damage = Math.floor(damage * 1.5);
-                    isCritical = true;
-                }
-
-                defender.stats.health -= damage;
-                
-                let attackMessage = `${attacker.name} attacks ${defender.name} for ${damage} damage!`;
-                if (isCritical) attackMessage = `A critical hit! ${attackMessage}`;
-                if (enrageBonus > 0) attackMessage += ` (Enraged!)`;
-                
-                logMessage(attackMessage);
-                updateHealthBar(defenderId, defender.stats.health, defender.maxHealth);
-                updateFighterUI(defender, defenderId);
-            }
-            
-            function useAbility() {
-                if (!selectedAbility.effect) {
-                    logMessage(`${selectedAbility.name} has no effect!`);
-                    return;
-                }
-                const effect = selectedAbility.effect;
-
-                switch(effect.type) {
-                    case 'heal':
-                        playerInBattle.stats.health = Math.min(playerInBattle.maxHealth, playerInBattle.stats.health + effect.value);
-                        logMessage(`${playerInBattle.name} uses ${selectedAbility.name}, healing for ${effect.value} health.`);
-                        updateHealthBar('player', playerInBattle.stats.health, playerInBattle.maxHealth);
-                        updateFighterUI(playerInBattle, 'player');
-                        break;
-                    case 'damage':
-                        opponentInBattle.stats.health -= effect.value;
-                        logMessage(`${playerInBattle.name} uses ${selectedAbility.name}, dealing ${effect.value} damage to ${opponentInBattle.name}.`);
-                        updateHealthBar('opponent', opponentInBattle.stats.health, opponentInBattle.maxHealth);
-                        updateFighterUI(opponentInBattle, 'opponent');
-                        break;
-                    case 'buff':
-                        applyEffect(effect, playerInBattle, playerInBattle);
-                        break;
-                    case 'debuff':
-                        applyEffect(effect, opponentInBattle, playerInBattle);
-                        break;
-                }
-                abilityBtn.disabled = true;
-                checkGameOver();
-                if(!isGameOver) endTurn();
-            }
-
-            function endTurn() {
-                if (isGameOver) return;
-                isPlayerTurn = !isPlayerTurn;
-
-                if (isPlayerTurn) {
-                    roundCount++;
-                    roundCounterEl.textContent = `Round ${roundCount}`;
-                    if (roundCount === 10) logMessage("The kombatants are getting tired... and angry! All attacks are now stronger!");
-                    tickEffects(playerInBattle, 'player');
-                    actionButtons.classList.remove('d-none');
-                } else {
-                    opponentTurn();
-                }
-            }
-
-            function checkGameOver() {
-                if (playerInBattle.stats.health <= 0 || opponentInBattle.stats.health <= 0) {
-                    isGameOver = true;
-                    const winner = opponentInBattle.stats.health <= 0 ? playerInBattle : opponentInBattle;
-                    const loser = winner === playerInBattle ? opponentInBattle : playerInBattle;
-
-                    logMessage(`${loser.name} has been pureed! ${winner.name} is the winner!`);
-                    document.getElementById('game-over-body').textContent = winner === playerInBattle ? 
-                        `Congratulations! You defeated ${loser.name}!` : 
-                        `You were defeated by ${winner.name}!`;
-                    
-                    gameOverModal.show();
-                    actionButtons.classList.add('d-none');
-                    return true;
-                }
-                return false;
-            }
-
-            function opponentTurn() {
-                actionButtons.classList.add('d-none');
-                tickEffects(opponentInBattle, 'opponent');
-
-                logMessage(`${opponentInBattle.name} is preparing its move...`);
-                
-                setTimeout(() => {
-                    performAttack(opponentInBattle, playerInBattle, 'player');
-                    if (!checkGameOver()) endTurn();
-                }, 1500); 
-            }
-            
-            attackBtn.addEventListener('click', () => {
-                if (!isPlayerTurn || isGameOver) return;
-                actionButtons.classList.add('d-none');
-                performAttack(playerInBattle, opponentInBattle, 'opponent');
-                if (!checkGameOver()) endTurn();
-            });
-
-            abilityBtn.addEventListener('click', () => {
-                if (!isPlayerTurn || isGameOver) return;
-                actionButtons.classList.add('d-none');
-                useAbility();
-            });
-
-            // --- SETUP AND UI ---
-            function createFighterDisplay(character, isPlayer = false) {
-                const charId = isPlayer ? 'player' : 'opponent';
-                return `
-                    <div class="fighter-card">
-                        <img src="${character.image}" alt="${character.name}" class="fighter-img mb-3">
-                        <h2>${character.name}</h2>
-                        <ul class="list-unstyled">
-                            <li><strong>Health:</strong> <span id="${charId}-health">${character.stats.health}</span> / ${character.maxHealth}</li>
-                        </ul>
-                        <div id="${charId}-health-bar" class="health-bar-container">
-                            <div class="health-bar bg-success"></div>
-                        </div>
-                        <ul class="list-unstyled mt-3">
-                            <li><strong>Attack:</strong> <span id="${charId}-attack">${character.stats.attack}</span></li>
-                            <li><strong>Defense:</strong> <span id="${charId}-defense">${character.stats.defense}</span></li>
-                        </ul>
-                        <div id="${charId}-buffs" class="mt-2">
-                             <!-- Initial buffs like weapon choice will go here -->
-                        </div>
-                         <div id="${charId}-effects" class="mt-2">
-                            <!-- Temporary effects from abilities will go here -->
-                        </div>
-                    </div>`;
-            }
-
-            function applyPermanentBuff(item, fighter) {
-                if (!item.statEffect) return;
-                let log = `You chose ${item.name}.`;
-                const effects = [];
-                for (const stat in item.statEffect) {
-                    fighter.stats[stat] += item.statEffect[stat];
-                    let sign = item.statEffect[stat] > 0 ? '+' : '';
-                    effects.push(`${sign}${item.statEffect[stat]} ${stat}`);
-                }
-                log += ` (${effects.join(', ')})`;
-                logMessage(log);
-            }
-
-            confirmChoicesBtn.addEventListener('click', () => {
-                applyPermanentBuff(selectedWeapon, playerInBattle);
-                playerInBattle.maxHealth = playerInBattle.stats.health; // Update max health after buffs
-
-                logMessage(`You chose the ${selectedAbility.name} ability.`);
-                
-                // Display permanent equipment
-                document.getElementById('player-buffs').innerHTML = `
-                    <span class="badge bg-secondary me-1" title="${selectedWeapon.description}">${selectedWeapon.name}</span>
-                `;
-
-                updateFighterUI(playerInBattle, 'player'); // Update UI with buffed stats
-
-                itemModal.hide();
-                logMessage(`The fight begins!`);
-                actionButtons.classList.remove('d-none');
-                tickEffects(playerInBattle, 'player');
-            });
-            
-            playAgainBtn.addEventListener('click', () => {
-                location.reload();
-            });
-
-            enterArenaBtn.addEventListener('click', () => {
-                if (!playerCharacter) return;
-                
-                playerInBattle = JSON.parse(JSON.stringify(playerCharacter));
-                playerInBattle.maxHealth = playerInBattle.stats.health;
-                playerInBattle.activeEffects = [];
-
-                const availableOpponents = characters.filter(char => char.id !== playerCharacter.id);
-                opponentInBattle = JSON.parse(JSON.stringify(availableOpponents[Math.floor(Math.random() * availableOpponents.length)]));
-                opponentInBattle.maxHealth = opponentInBattle.stats.health;
-                opponentInBattle.activeEffects = [];
-                
-                document.getElementById('player-fighter-col').innerHTML = createFighterDisplay(playerInBattle, true);
-                document.getElementById('opponent-fighter-col').innerHTML = createFighterDisplay(opponentInBattle);
-
-                charSelectionScreen.style.display = 'none';
-                arenaScreen.style.display = 'block';
-
-                populateItemModal();
-                itemModal.show();
-            });
-
+            // --- Character Selection Logic (Mostly Unchanged) ---
             function renderCharacters() {
                 characterContainer.innerHTML = characters.map(char => `
                     <div class="col-12 col-md-6 col-lg-3 mb-4">
@@ -513,11 +305,6 @@
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">${char.name}</h5>
                                 <p class="card-text">${char.description}</p>
-                                <ul class="list-group list-group-flush mb-3">
-                                    <li class="list-group-item"><strong>Health:</strong> ${char.stats.health}</li>
-                                    <li class="list-group-item"><strong>Attack:</strong> ${char.stats.attack}</li>
-                                    <li class="list-group-item"><strong>Defense:</strong> ${char.stats.defense}</li>
-                                </ul>
                                 <button class="btn btn-outline-primary mt-auto select-btn">Select ${char.name}</button>
                             </div>
                         </div>
@@ -550,50 +337,20 @@
                     enterArenaBtn.disabled = false;
                 }
             });
-            
-            function populateItemModal() {
-                const weaponChoicesContainer = document.getElementById('weapon-choices');
-                const abilityChoicesContainer = document.getElementById('ability-choices');
-                
-                const weapons = itemPool.filter(item => item.type === 'weapon' || item.type === 'armor');
-                const randomWeapons = [...weapons].sort(() => 0.5 - Math.random()).slice(0, 3);
-                
-                const abilities = itemPool.filter(item => item.type === 'ability');
-                const randomAbilities = [...abilities].sort(() => 0.5 - Math.random()).slice(0, 3);
 
-                const createItemCard = (item) => `
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100 item-card" data-item-id="${item.id}" data-item-type="${item.type}">
-                            <div class="card-body">
-                                <h6 class="card-title">${item.name}</h6>
-                                <p class="card-text small">${item.description}</p>
-                            </div>
-                        </div>
-                    </div>`;
-
-                weaponChoicesContainer.innerHTML = randomWeapons.map(createItemCard).join('');
-                abilityChoicesContainer.innerHTML = randomAbilities.map(createItemCard).join('');
-            }
-             itemModalEl.addEventListener('click', (event) => {
-                const card = event.target.closest('.card.item-card');
-                if (!card) return;
-
-                const itemId = card.dataset.itemId;
-                const itemType = card.dataset.itemType;
+            // --- Arena Transition ---
+            enterArenaBtn.addEventListener('click', () => {
+                if (!playerCharacter) return;
                 
-                if (itemType === 'weapon' || itemType === 'armor') {
-                    document.querySelectorAll('#weapon-choices .card.item-card').forEach(c => c.classList.remove('selected'));
-                    selectedWeapon = itemPool.find(item => item.id === itemId);
-                } else if (itemType === 'ability') {
-                    document.querySelectorAll('#ability-choices .card.item-card').forEach(c => c.classList.remove('selected'));
-                    selectedAbility = itemPool.find(item => item.id === itemId);
-                }
+                // Set player portrait on the new board
+                document.getElementById('player-portrait').src = playerCharacter.image;
+                document.getElementById('player-health').textContent = playerCharacter.stats.health;
                 
-                card.classList.add('selected');
-
-                if (selectedWeapon && selectedAbility) {
-                    confirmChoicesBtn.disabled = false;
-                }
+                // Hide selection screen and show the new arena
+                charSelectionScreen.style.display = 'none';
+                arenaScreen.style.display = 'flex'; // Use flex to center the board
+                
+                console.log(`Welcome to the arena, ${playerCharacter.name}!`);
             });
         });
     </script>
